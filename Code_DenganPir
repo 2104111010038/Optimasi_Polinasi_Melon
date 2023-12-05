@@ -39,11 +39,11 @@ void loop() {
       Serial.println(" %");
       // Kontrol relay berdasarkan suhu dengan hysteresis
       if (suhu < SUHU_BATAS_BAWAH) {
-        digitalWrite(RELAYPIN, LOW); // Nyalakan relay jika suhu kurang dari batas bawah
-        Serial.println("Relay dinyalakan karena suhu kurang dari batas bawah");
+        digitalWrite(RELAYPIN, LOW); // Relay mati maka lampu hidup
+        Serial.println("Relay dimatikan karena suhu kurang dari batas bawah");
       } else if (suhu >= SUHU_BATAS_ATAS) {
-        digitalWrite(RELAYPIN, HIGH);  // Matikan relay jika suhu lebih dari atau sama dengan batas atas
-        Serial.println("Relay dimatikan karena suhu lebih dari atau sama dengan batas atas");
+        digitalWrite(RELAYPIN, HIGH);  // Relay hidup maka lampu mati
+        Serial.println("Relay dinyalakan karena suhu lebih dari atau sama dengan batas atas");
       }
     }
   } else {
