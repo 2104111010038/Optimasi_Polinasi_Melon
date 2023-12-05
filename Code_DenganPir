@@ -1,61 +1,55 @@
 #include <DHT.h>
-
 #define DHTPIN A0   // Pin digital untuk sensor DHT22
 #define DHTTYPE DHT22
 #define PIRPIN 2    // Pin digital untuk sensor PIR
-#define LAMPPIN 7   // Pin digital untuk relay yang mengendalikan lampu pijar
+#define RELAYPIN 7  // Pin digital untuk relay yang mengendalikan lampu pijar
 #define SUHU_BATAS_BAWAH 30
 #define SUHU_BATAS_ATAS 35
-
 DHT dht(DHTPIN, DHTTYPE);
-
+int deteksiGerakan = 0;  // Jumlah deteksi gerakan
 void setup() {
   Serial.begin(9600);
   dht.begin();
   pinMode(PIRPIN, INPUT);    // Set pin sensor PIR sebagai input
-  pinMode(LAMPPIN, OUTPUT);  // Set pin relay sebagai output
+  pinMode(RELAYPIN, OUTPUT); // Set pin relay sebagai output
 }
-
 void loop() {
   // Baca status PIR
   int pirStatus = digitalRead(PIRPIN);
-
   // Tampilkan status PIR di Serial Monitor
   if (pirStatus == HIGH) {
-    Serial.println("Gerakan terdeteksi!");
-
-    // Baca suhu dalam derajat Celsius
-    float suhu = dht.readTemperature();
-
-    // Baca kelembaban relatif
-    float kelembaban = dht.readHumidity();
-
-    // Periksa apakah pembacaan berhasil
-    if (isnan(suhu) || isnan(kelembaban)) {
-      Serial.println("Gagal membaca dari sensor DHT22!");
-      return;
+    deteksiGerakan++;
+    Serial.print("Gerakan terdeteksi! Deteksi ke-");
+    Serial.println(deteksiGerakan);
+    if (deteksiGerakan > 0) {  // Hanya jalankan kode DHT setelah deteksi pertama
+      // Baca suhu dalam derajat Celsius
+      float suhu = dht.readTemperature();
+      // Baca kelembaban relatif
+      float kelembaban = dht.readHumidity();
+      // Periksa apakah pembacaan berhasil
+      if (isnan(suhu) || isnan(kelembaban)) {
+        Serial.println("Gagal membaca dari sensor DHT22!");
+        return;
+      }
+      // Tampilkan hasil pembacaan
+      Serial.print("Suhu: ");
+      Serial.print(suhu);
+      Serial.print(" °C, Kelembaban: ");
+      Serial.print(kelembaban);
+      Serial.println(" %");
+      // Kontrol relay berdasarkan suhu dengan hysteresis
+      if (suhu < SUHU_BATAS_BAWAH) {
+        digitalWrite(RELAYPIN, LOW); // Nyalakan relay jika suhu kurang dari batas bawah
+        Serial.println("Relay dinyalakan karena suhu kurang dari batas bawah");
+      } else if (suhu >= SUHU_BATAS_ATAS) {
+        digitalWrite(RELAYPIN, HIGH);  // Matikan relay jika suhu lebih dari atau sama dengan batas atas
+        Serial.println("Relay dimatikan karena suhu lebih dari atau sama dengan batas atas");
+      }
     }
-
-    // Tampilkan hasil pembacaan
-    Serial.print("Suhu: ");
-    Serial.print(suhu);
-    Serial.print(" °C, Kelembaban: ");
-    Serial.print(kelembaban);
-    Serial.println(" %");
-
-    // Kontrol lampu berdasarkan suhu dengan hysteresis
-    if (suhu < 28) {
-      digitalWrite(LAMPPIN, LOW); // Nyalakan lampu jika suhu kurang dari batas bawah
-      Serial.println("Lampu dinyalakan karena suhu kurang dari batas bawah");
-    } else if (suhu >= 29) {
-      digitalWrite(LAMPPIN, HIGH);  // Matikan lampu jika suhu lebih dari atau sama dengan batas atas
-      Serial.println("Lampu dimatikan karena suhu lebih dari atau sama dengan batas atas");
-    }
-
   } else {
     Serial.println("Tidak ada gerakan.");
-    digitalWrite(LAMPPIN, LOW); // Matikan lampu jika tidak ada gerakan
+    digitalWrite(RELAYPIN, HIGH); 
+    deteksiGerakan = 0;  
   }
-
   delay(2000);  // Delay antara loop untuk menghindari pembacaan yang terlalu cepat
 }
