@@ -12,7 +12,7 @@
 DHT dht(DHTPIN, DHTTYPE);
 int deteksiGerakan = 0;  // Jumlah deteksi gerakan
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);  // I2C address 0x27, 16 columns and 2 rows, adjust based on your LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Alamat I2C 0x27, 16 kolom dan 2 baris, sesuaikan dengan LCD Anda
 
 void setup() {
   Serial.begin(9600);
@@ -20,8 +20,8 @@ void setup() {
   pinMode(PIRPIN, INPUT);    // Set pin sensor PIR sebagai input
   pinMode(RELAYPIN, OUTPUT); // Set pin relay sebagai output
   
-  lcd.begin(16, 2);  // Initialize the LCD
-  lcd.backlight();   // Turn on the backlight
+  lcd.begin(16, 2);  // Inisialisasi LCD
+  lcd.backlight();   // Nyalakan lampu latar
 }
 
 void loop() {
@@ -30,60 +30,52 @@ void loop() {
 
   // Tampilkan status PIR di Serial Monitor
   if (pirStatus == HIGH) {
+    // Hitung jarak atau cek berdasarkan spesifikasi sensor PIR
+    // Pastikan sensor PIR ditempatkan dengan benar sesuai dengan jangkauan yang diinginkan
+
     deteksiGerakan++;
     Serial.print("Gerakan terdeteksi! Deteksi ke-");
     Serial.println(deteksiGerakan);
-
-    if (deteksiGerakan > 0) {  // Hanya jalankan kode DHT setelah deteksi pertama
-      // Baca suhu dalam derajat Celsius
-      float suhu = dht.readTemperature();
-      // Baca kelembaban relatif
-      float kelembaban = dht.readHumidity();
-
-      // Periksa apakah pembacaan berhasil
-      if (isnan(suhu) || isnan(kelembaban)) {
-        Serial.println("Gagal membaca dari sensor DHT22!");
-        return;
-      }
-
-      // Tampilkan hasil pembacaan di Serial Monitor
-      Serial.print("Suhu: ");
-      Serial.print(suhu);
-      Serial.print(" °C, Kelembaban: ");
-      Serial.print(kelembaban);
-      Serial.println(" %");
-
-      // Tampilkan hasil pembacaan di LCD
-      lcd.clear();
-      lcd.setCursor(0, 1);
-      lcd.print("Suhu: ");
-      lcd.print(suhu);
-      lcd.print("C");
-
-      //lcd.setCursor(8, 1);
-    //  lcd.print("Kelembapan: ");
-     // lcd.print(kelembaban);
-     // lcd.print("%");
-
-      // Kontrol relay berdasarkan suhu dengan hysteresis
-      if (suhu < SUHU_BATAS_BAWAH) {
-        digitalWrite(RELAYPIN, LOW); // Relay mati maka lampu hidup
-        Serial.println("Relay dimatikan karena suhu kurang dari batas bawah");
-      } else if (suhu >= SUHU_BATAS_ATAS) {
-        digitalWrite(RELAYPIN, HIGH);  // Relay hidup maka lampu mati
-        Serial.println("Relay dinyalakan karena suhu lebih dari atau sama dengan batas atas");
-      }
-    }
-  } else {
-    Serial.println("Tidak ada gerakan.");
-    digitalWrite(RELAYPIN, HIGH); 
-    // No need to reset the PIR count
   }
 
-  // Display PIR count on LCD
+  // Baca suhu dalam derajat Celsius
+  float suhu = dht.readTemperature();
+  // Baca kelembaban relatif
+  float kelembaban = dht.readHumidity();
+
+  // Periksa apakah pembacaan berhasil
+  if (isnan(suhu) || isnan(kelembaban)) {
+    Serial.println("Gagal membaca dari sensor DHT22!");
+    return;
+  }
+
+  // Tampilkan hasil pembacaan di Serial Monitor
+  Serial.print("Suhu: ");
+  Serial.print(suhu);
+  Serial.print(" °C, Kelembaban: ");
+  Serial.print(kelembaban);
+  Serial.println(" %");
+
+  // Tampilkan hasil pembacaan di LCD
+  lcd.clear();
+  lcd.setCursor(0, 1);
+  lcd.print("Suhu: ");
+  lcd.print(suhu);
+  lcd.print("C");
+
+  // Kontrol relay berdasarkan suhu dengan hysteresis
+  if (suhu < SUHU_BATAS_BAWAH) {
+    digitalWrite(RELAYPIN, LOW); // Relay mati maka lampu hidup
+    Serial.println("Relay dimatikan karena suhu kurang dari batas bawah");
+  } else if (suhu >= SUHU_BATAS_ATAS) {
+    digitalWrite(RELAYPIN, HIGH);  // Relay hidup maka lampu mati
+    Serial.println("Relay dinyalakan karena suhu lebih dari atau sama dengan batas atas");
+  }
+
+  // Tampilkan jumlah deteksi PIR di LCD
   lcd.setCursor(0, 0);
   lcd.print(deteksiGerakan);
   lcd.print(" x Terdeteksi");
 
-  delay(2000);  // Delay antara loop untuk menghindari pembacaan yang terlalu cepat
+  delay(1500);  // Delay antara loop untuk menghindari pembacaan yang terlalu cepat
 }
